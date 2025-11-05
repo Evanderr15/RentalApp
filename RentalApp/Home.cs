@@ -55,7 +55,9 @@ namespace RentalApp
 
         private void button2_Click(object sender, EventArgs e)
         {
-
+            Barang barang = new Barang();
+            barang.Show();
+            this.Hide();
         }
 
         private void button5_Click(object sender, EventArgs e)
