@@ -22,7 +22,7 @@ namespace RentalApp
 
         public Barang()
         {
-            alamat = "server=localhost; database=db_rental; username=root; password=;";
+            alamat = "server=localhost; database=db_rentalapp; username=root; password=;";
             koneksi = new MySqlConnection(alamat);
             InitializeComponent();
         }
@@ -31,16 +31,16 @@ namespace RentalApp
         {
             try
             {
-                if (txtNB.Text != "" && txtStok.Text != "" && txtHsewa.Text != "")
+                if (txtNB.Text != "" && txtHsewa.Text != "" && txtStok.Text != "")
                 {
-                    query = "INSERT INTO tbl_barang (nama_barang, stok, harga_sewa) VALUES (@nama_barang, @stok, @harga_sewa)";
+                    query = "INSERT INTO tbl_barang (nama_barang, harga_sewa, stok) VALUES (@nama_barang, @harga_sewa, @stok)";
 
                     koneksi.Open();
                     perintah = new MySqlCommand(query, koneksi);
                     perintah.Parameters.AddWithValue("@nama_barang", txtNB.Text);
-                    perintah.Parameters.AddWithValue("@stok", txtStok.Text);
                     perintah.Parameters.AddWithValue("@harga_sewa", txtHsewa.Text);
-                    adapter = new MySqlDataAdapter(perintah);
+                    perintah.Parameters.AddWithValue("@stok", txtStok.Text);
+                    // adapter tidak diperlukan untuk insert; cukup gunakan perintah.ExecuteNonQuery()
                     int res = perintah.ExecuteNonQuery();
                     koneksi.Close();
 
@@ -61,7 +61,7 @@ namespace RentalApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show("Error: " + ex.Message); // Lebih baik tampilkan pesan error yang lebih bersih
             }
         }
 
@@ -73,7 +73,7 @@ namespace RentalApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show("Error: " + ex.Message);
             }
         }
 
@@ -81,27 +81,27 @@ namespace RentalApp
         {
             try
             {
-                if (txtNB.Text != "")
+                if (txtIDB.Text != "")
                 {
-                    query = "SELECT * FROM tbl_barang WHERE nama_barang = @nama_barang";
+                    query = "SELECT * FROM tbl_barang WHERE id_barang = @id_barang";
                     ds.Clear();
                     koneksi.Open();
                     perintah = new MySqlCommand(query, koneksi);
-                    perintah.Parameters.AddWithValue("@nama_barang", txtNB.Text);
+                    perintah.Parameters.AddWithValue("@id_barang", txtIDB.Text);
                     adapter = new MySqlDataAdapter(perintah);
                     adapter.Fill(ds);
                     koneksi.Close();
 
                     if (ds.Tables[0].Rows.Count > 0)
                     {
-                        foreach (DataRow kolom in ds.Tables[0].Rows)
-                        {
-                            txtIDB.Text = kolom["id_barang"].ToString();
-                            txtNB.Text = kolom["nama_barang"].ToString();
-                            txtStok.Text = kolom["stok"].ToString();
-                            txtHsewa.Text = kolom["harga_sewa"].ToString();
-                        }
-                        txtNB.Enabled = false; // Disable nama barang saat edit
+                        // Karena query WHERE id_barang, seharusnya hanya satu baris; tidak perlu loop
+                        DataRow kolom = ds.Tables[0].Rows[0];
+                        txtIDB.Text = kolom["id_barang"].ToString();
+                        txtNB.Text = kolom["nama_barang"].ToString();
+                        txtHsewa.Text = kolom["harga_sewa"].ToString(); // Diperbaiki: txtHsewa untuk harga_sewa
+                        txtStok.Text = kolom["stok"].ToString(); // Diperbaiki: txtStok untuk stok
+
+                        txtIDB.Enabled = false; // Disable ID saat edit
                         dataGridView1.DataSource = ds.Tables[0];
                         btnSave.Enabled = false;
                         btnU.Enabled = true;
@@ -121,7 +121,7 @@ namespace RentalApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show("Error: " + ex.Message);
             }
         }
 
@@ -129,17 +129,17 @@ namespace RentalApp
         {
             try
             {
-                if (txtNB.Text != "" && txtStok.Text != "" && txtHsewa.Text != "" && txtIDB.Text != "")
+                if (txtNB.Text != "" && txtHsewa.Text != "" && txtStok.Text != "" && txtIDB.Text != "")
                 {
-                    query = "UPDATE tbl_barang SET nama_barang = @nama_barang, stok = @stok, harga_sewa = @harga_sewa WHERE id_barang = @id_barang";
+                    query = "UPDATE tbl_barang SET nama_barang = @nama_barang, harga_sewa = @harga_sewa, stok = @stok WHERE id_barang = @id_barang";
 
                     koneksi.Open();
                     perintah = new MySqlCommand(query, koneksi);
                     perintah.Parameters.AddWithValue("@nama_barang", txtNB.Text);
-                    perintah.Parameters.AddWithValue("@stok", txtStok.Text);
                     perintah.Parameters.AddWithValue("@harga_sewa", txtHsewa.Text);
+                    perintah.Parameters.AddWithValue("@stok", txtStok.Text);
                     perintah.Parameters.AddWithValue("@id_barang", txtIDB.Text);
-                    adapter = new MySqlDataAdapter(perintah);
+                    // adapter tidak diperlukan untuk update; cukup gunakan perintah.ExecuteNonQuery()
                     int res = perintah.ExecuteNonQuery();
                     koneksi.Close();
 
@@ -160,7 +160,7 @@ namespace RentalApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show("Error: " + ex.Message);
             }
         }
 
@@ -170,6 +170,11 @@ namespace RentalApp
             home.Show();
             this.Hide();
         }
+
+        // Event handlers kosong dihapus untuk membersihkan kode
+        // private void txtNB_TextChanged(object sender, EventArgs e) { }
+        // private void txtHsewa_TextChanged(object sender, EventArgs e) { }
+        // private void label3_Click(object sender, EventArgs e) { }
 
         private void Barang_Load(object sender, EventArgs e)
         {
@@ -184,20 +189,21 @@ namespace RentalApp
                 koneksi.Close();
 
                 dataGridView1.DataSource = ds.Tables[0];
+                // Asumsikan urutan kolom: 0=id_barang, 1=nama_barang, 2=harga_sewa, 3=stok
                 dataGridView1.Columns[0].Width = 100;
                 dataGridView1.Columns[0].HeaderText = "ID Barang";
                 dataGridView1.Columns[1].Width = 150;
                 dataGridView1.Columns[1].HeaderText = "Nama Barang";
                 dataGridView1.Columns[2].Width = 120;
-                dataGridView1.Columns[2].HeaderText = "Stok";
+                dataGridView1.Columns[2].HeaderText = "Harga Sewa";
                 dataGridView1.Columns[3].Width = 120;
-                dataGridView1.Columns[3].HeaderText = "Harga Sewa";
+                dataGridView1.Columns[3].HeaderText = "Stok";
 
                 txtIDB.Clear();
                 txtNB.Clear();
-                txtStok.Clear();
                 txtHsewa.Clear();
-                txtNB.Enabled = true; // Enable nama barang untuk input baru
+                txtStok.Clear();
+                txtNB.Enabled = true;
                 txtIDB.Focus();
                 btnU.Enabled = false;
                 btnC.Enabled = false;
@@ -206,7 +212,7 @@ namespace RentalApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show("Error: " + ex.Message);
             }
         }
     }

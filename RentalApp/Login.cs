@@ -21,7 +21,7 @@ namespace RentalApp
         private string alamat, query;
         public Login()
         {
-            alamat = "server=localhost; database=db_rental; username=root; password=;";
+            alamat = "server=localhost; database=db_rentalapp; username=root; password=;";
             koneksi = new MySqlConnection(alamat);
 
             InitializeComponent();
@@ -39,7 +39,7 @@ namespace RentalApp
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            txtPassword.PasswordChar = '*';
         }
 
         private void label2_Click(object sender, EventArgs e)
@@ -53,6 +53,11 @@ namespace RentalApp
         }
 
         private void txtUsername_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e)
         {
 
         }

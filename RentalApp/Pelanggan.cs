@@ -21,7 +21,7 @@ namespace RentalApp
         private string alamat, query;
         public Pelanggan()
         {
-            alamat = "server=localhost; database=db_rental; username=root; password=;";
+            alamat = "server=localhost; database=db_rentalapp; username=root; password=;";
             koneksi = new MySqlConnection(alamat);
             InitializeComponent();
         }

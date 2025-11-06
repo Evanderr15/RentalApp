@@ -19,33 +19,35 @@ namespace RentalApp
         private MySqlCommand perintah;
         private DataSet ds = new DataSet();
         private string alamat, query;
+
         public Transaksi()
         {
-            alamat = "server=localhost; database=db_rental; username=root; password=;";
+            alamat = "server=localhost; database=db_rentalapp; username=root; password=;";
             koneksi = new MySqlConnection(alamat);
-
             InitializeComponent();
         }
 
         private void dateTimePicker1_ValueChanged(object sender, EventArgs e)
         {
-
+            // Event handler kosong, tidak perlu perubahan
         }
 
         private void btnSimpan_Click(object sender, EventArgs e)
         {
             try
             {
-                if (CBPel.Text != "" && CBBar.Text != "" && dtpM.Text != "" && dtpK.Text != "")
+                if (CBPel.Text != "" && CBBar.Text != "" && dtpM.Text != "" && dtpK.Text != "" && CBStatus.Text != "" && txtTotal.Text != "")
                 {
-                    query = "INSERT INTO tbl_transaksi (id_pelanggan, id_barang, TanggalMulai, TanggalKembali, Status) VALUES (@id_pelanggan, @id_barang, @TanggalMulai, @TanggalKembali)";
+                    // Perbaikan: Tambahkan kolom BiayaTotal ke dalam INSERT INTO
+                    query = "INSERT INTO tbl_transaksi (id_pelanggan, id_barang, TanggalMulai, TanggalKembali, Status, BiayaTotal) VALUES (@id_pelanggan, @id_barang, @TanggalMulai, @TanggalKembali, @Status, @BiayaTotal)";
 
                     koneksi.Open();
                     perintah = new MySqlCommand(query, koneksi);
                     perintah.Parameters.AddWithValue("@id_pelanggan", CBPel.Text);
                     perintah.Parameters.AddWithValue("@id_barang", CBBar.Text);
-                    perintah.Parameters.AddWithValue("@TanggalMulai", dtpM);
-                    perintah.Parameters.AddWithValue("@TanggalKembali", dtpK.Text);
+                    // Perbaikan: Gunakan .Value untuk DateTimePicker
+                    perintah.Parameters.AddWithValue("@TanggalMulai", dtpM.Value);
+                    perintah.Parameters.AddWithValue("@TanggalKembali", dtpK.Value);
                     perintah.Parameters.AddWithValue("@Status", CBStatus.Text);
                     perintah.Parameters.AddWithValue("@BiayaTotal", txtTotal.Text);
                     adapter = new MySqlDataAdapter(perintah);
@@ -83,8 +85,9 @@ namespace RentalApp
 
                     koneksi.Open();
                     perintah = new MySqlCommand(query, koneksi);
-                    perintah.Parameters.AddWithValue("@TanggalMulai", dtpM);
-                    perintah.Parameters.AddWithValue("@TanggalKembali", dtpK.Text);
+                    // Perbaikan: Gunakan .Value untuk DateTimePicker
+                    perintah.Parameters.AddWithValue("@TanggalMulai", dtpM.Value);
+                    perintah.Parameters.AddWithValue("@TanggalKembali", dtpK.Value);
                     perintah.Parameters.AddWithValue("@Status", CBStatus.Text);
                     perintah.Parameters.AddWithValue("@BiayaTotal", txtTotal.Text);
                     perintah.Parameters.AddWithValue("@id_transaksi", txtIDT.Text);
@@ -131,27 +134,29 @@ namespace RentalApp
             {
                 if (CBPel.Text != "")
                 {
-                    query = string.Format("select * from tbl_transaksi where id_pelanggan = '{0}'", CBPel.Text);
+                    // Perbaikan: Gunakan parameterized query untuk menghindari SQL injection
+                    query = "SELECT * FROM tbl_transaksi WHERE id_pelanggan = @id_pelanggan";
                     ds.Clear();
                     koneksi.Open();
                     perintah = new MySqlCommand(query, koneksi);
+                    perintah.Parameters.AddWithValue("@id_pelanggan", CBPel.Text);
                     adapter = new MySqlDataAdapter(perintah);
                     perintah.ExecuteNonQuery();
                     adapter.Fill(ds);
                     koneksi.Close();
                     if (ds.Tables[0].Rows.Count > 0)
                     {
+                        // Catatan: Jika ada multiple rows, ini hanya mengisi dari row terakhir. Pertimbangkan untuk menggunakan DataGridView selection.
                         foreach (DataRow kolom in ds.Tables[0].Rows)
                         {
                             txtIDT.Text = kolom["id_transaksi"].ToString();
                             CBPel.Text = kolom["id_pelanggan"].ToString();
                             CBBar.Text = kolom["id_barang"].ToString();
-                            dtpM.Text = kolom["TanggalMulai"].ToString();
-                            dtpK.Text = kolom["TanggalKembali"].ToString();
+                            // Perbaikan: Gunakan .Value untuk mengisi DateTimePicker
+                            dtpM.Value = DateTime.Parse(kolom["TanggalMulai"].ToString());
+                            dtpK.Value = DateTime.Parse(kolom["TanggalKembali"].ToString());
                             CBStatus.Text = kolom["Status"].ToString();
                             txtTotal.Text = kolom["BiayaTotal"].ToString();
-
-
                         }
                         CBPel.Enabled = false;
                         dataGridView1.DataSource = ds.Tables[0];
@@ -165,7 +170,6 @@ namespace RentalApp
                         MessageBox.Show("Data Tidak Ada !!");
                         Transaksi_Load(null, null);
                     }
-
                 }
                 else
                 {
@@ -185,12 +189,27 @@ namespace RentalApp
             this.Hide();
         }
 
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label12_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label17_Click(object sender, EventArgs e)
+        {
+
+        }
+
         private void Transaksi_Load(object sender, EventArgs e)
         {
             try
             {
                 koneksi.Open();
-                query = string.Format("select * from tbl_Transaksi");
+                query = "SELECT * FROM tbl_transaksi";
                 perintah = new MySqlCommand(query, koneksi);
                 adapter = new MySqlDataAdapter(perintah);
                 perintah.ExecuteNonQuery();
@@ -198,20 +217,22 @@ namespace RentalApp
                 adapter.Fill(ds);
                 koneksi.Close();
                 dataGridView1.DataSource = ds.Tables[0];
+
+                // Perbaikan: Atur kolom DataGridView dengan benar (asumsi 7 kolom: id_transaksi, id_pelanggan, id_barang, TanggalMulai, TanggalKembali, Status, BiayaTotal)
                 dataGridView1.Columns[0].Width = 100;
                 dataGridView1.Columns[0].HeaderText = "ID Transaksi";
-                dataGridView1.Columns[0].Width = 100;
-                dataGridView1.Columns[0].HeaderText = "ID Pelanggan";
-                dataGridView1.Columns[0].Width = 100;
-                dataGridView1.Columns[0].HeaderText = "ID Barang";
-                dataGridView1.Columns[1].Width = 150;
-                dataGridView1.Columns[1].HeaderText = "Tanggal Mulai";
-                dataGridView1.Columns[2].Width = 120;
-                dataGridView1.Columns[2].HeaderText = "Tanggal Pemgembalian";
-                dataGridView1.Columns[3].Width = 120;
-                dataGridView1.Columns[3].HeaderText = "Status";
+                dataGridView1.Columns[1].Width = 100;
+                dataGridView1.Columns[1].HeaderText = "ID Pelanggan";
+                dataGridView1.Columns[2].Width = 100;
+                dataGridView1.Columns[2].HeaderText = "ID Barang";
+                dataGridView1.Columns[3].Width = 150;
+                dataGridView1.Columns[3].HeaderText = "Tanggal Mulai";
                 dataGridView1.Columns[4].Width = 120;
-                dataGridView1.Columns[4].HeaderText = "Total";
+                dataGridView1.Columns[4].HeaderText = "Tanggal Pengembalian";
+                dataGridView1.Columns[5].Width = 120;
+                dataGridView1.Columns[5].HeaderText = "Status";
+                dataGridView1.Columns[6].Width = 120;
+                dataGridView1.Columns[6].HeaderText = "Total";
 
                 txtIDT.Clear();
                 txtTotal.Clear();
@@ -220,7 +241,6 @@ namespace RentalApp
                 btnCL.Enabled = false;
                 btnSimpan.Enabled = true;
                 btnSc.Enabled = true;
-
             }
             catch (Exception ex)
             {
