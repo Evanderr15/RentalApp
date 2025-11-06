@@ -62,7 +62,9 @@ namespace RentalApp
 
         private void button5_Click(object sender, EventArgs e)
         {
-
+            Transaksi transaksi = new Transaksi();
+            transaksi.Show();
+            this.Hide();
         }
 
         private void Home_Load(object sender, EventArgs e)
